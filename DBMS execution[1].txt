@@ -1,0 +1,755 @@
+DATABASE 1:
+mysql> SELECT * FROM PUBLISHER;
++-------------+----------------+-----------+
+| NAME        | ADDRESS        | PHONE     |
++-------------+----------------+-----------+
+| MCGRAWWHILL | HOUSTIN,USA    |  10207060 |
+| PEARSON     | MUMBAI,INDIA   | 908070607 |
+| PHI         | PUNE,INDIA     |  90807060 |
+| SP          | BANGALORE      | 909090908 |
+| SSI         | FLORIDA        | 120938432 |
+| WILEY       | CALIFORNIA,USA | 110808088 |
++-------------+----------------+-----------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM LIBRARY_PROGRAMME;
++--------------+----------------+--------------+
+| PROGRAMME_ID | PROGRAMME_NAME | ADDRESS      |
++--------------+----------------+--------------+
+|         1000 | MVIT           | YELHANKA     |
+|         2000 | SVIT           | DODDABALLPUR |
+|         3000 | BMSIT          | AVANAHALLI   |
+|         4000 | SVCE           | VIDYANAGAR   |
+|         5000 | MSCE           | CHIKAJALA    |
+|         6000 | NMIT           | KOGILU       |
++--------------+----------------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BOOK;
++---------+--------------------------+----------------+----------+
+| BOOK_ID | TITLE                    | PUBLISHER_NAME | PUB_YEAR |
++---------+--------------------------+----------------+----------+
+|    1111 | FUNDAMENTALS OF DATABASE | PHI            |     2009 |
+|    2222 | BASICS OF LOGIC DESIGN   | PEARSON        |     2009 |
+|    3333 | DATA STRUCTURES          | MCGRAWWHILL    |     2015 |
+|    4444 | AI                       | WILEY          |     2017 |
+|    5555 | PROGRAMMING SKILLS       | SSI            |     2014 |
+|    6666 | DESIGN OF ALGORITHMS     | SP             |     2013 |
++---------+--------------------------+----------------+----------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BOOK_AUTHORS;
++---------+-----------------+
+| BOOK_ID | AUTHOR_NAME     |
++---------+-----------------+
+|    1111 | NAVATHE         |
+|    2222 | GODSE           |
+|    3333 | SAHANI          |
+|    4444 | RITHCHIE KNIGHT |
+|    5555 | BALAGURUSWAMY   |
+|    6666 | COREMEN         |
++---------+-----------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BOOK_COPIES;
++---------+--------------+--------------+
+| BOOK_ID | PROGRAMME_ID | NO_OF_COPIES |
++---------+--------------+--------------+
+|    1111 |         1000 |           10 |
+|    2222 |         1000 |           15 |
+|    2222 |         2000 |            5 |
+|    3333 |         3000 |            7 |
+|    4444 |         4000 |            9 |
+|    5555 |         5000 |            6 |
+|    6666 |         6000 |           12 |
++---------+--------------+--------------+
+7 rows in set (0.00 sec)
+
+mysql> SELECT * FROM BOOK_LENDING;
++---------+--------------+---------+------------+------------+
+| BOOK_ID | PROGRAMME_ID | CARD_NO | DATE_OUT   | DUE_DATE   |
++---------+--------------+---------+------------+------------+
+|    1111 |         1000 |      10 | 2017-02-15 | 2017-06-15 |
+|    2222 |         2000 |      10 | 2017-03-10 | 2017-08-15 |
+|    3333 |         3000 |      10 | 2017-04-15 | 2017-09-15 |
+|    4444 |         4000 |      10 | 2017-04-10 | 2017-11-15 |
+|    5555 |         5000 |      10 | 2016-01-15 | 2016-06-15 |
+|    5555 |         5000 |      20 | 2017-02-15 | 2017-06-15 |
+|    6666 |         6000 |      30 | 2017-03-10 | 2017-08-15 |
++---------+--------------+---------+------------+------------+
+7 rows in set (0.00 sec)
+
+mysql> SELECT C.PROGRAMME_ID,L.PROGRAMME_NAME,B.BOOK_ID,B.TITLE,B.PUBLISHER_NAME,B.PUB_YEAR,A.AUTHOR_NAME,C.NO_OF_COPIES
+    -> FROM BOOK B,BOOK_AUTHORS A,LIBRARY_PROGRAMME L,BOOK_COPIES C
+    -> WHERE B.BOOK_ID=A.BOOK_ID AND
+    -> B.BOOK_ID=C.BOOK_ID AND
+    -> L.PROGRAMME_ID=C.PROGRAMME_ID AND
+    -> (C.PROGRAMME_ID,C.BOOK_ID) IN
+    -> (SELECT
+    -> PROGRAMME_ID,BOOK_ID FROM
+    -> BOOK_COPIES
+    -> GROUP BY PROGRAMME_ID,BOOK_ID);
++--------------+----------------+---------+---------------------------+----------------+----------+----------------+--------------+
+| PROGRAMME_ID | PROGRAMME_NAME | BOOK_ID | TITLE                     | PUBLISHER_NAME | PUB_YEAR | AUTHOR_NAME    | NO_OF_COPIES |
++--------------+----------------+---------+---------------------------+----------------+----------+----------------+--------------+
+|         1000 | MVIT           |    1111 | FUNNDAMENTALS OF DATABASE | PHI            |     2009 | NAVATHE        |           10 |
+|         1000 | MVIT           |    2222 | BASICS OF LOGIC DESIGN    | PEARSON        |     2009 | GODSE          |           15 |
+|         2000 | SVIT           |    2222 | BASICS OF LOGIC DESIGN    | PEARSON        |     2009 | GODSE          |            5 |
+|         3000 | BMSIT          |    3333 | DATA STRUCTURES           | MCGRAWHILL     |     2015 | SAHANI         |            7 |
+|         4000 | SVCE           |    4444 | ARTIFICIAL INTELLIGENCE   | WILEY          |     2017 | RITCHIE KNIGHT |            9 |
+|         5000 | MSCE           |    5555 | PROGRAMMING SKILLS        | SSI            |     2014 | BALAGURUSWAMY  |            6 |
+|         6000 | NMIT           |    6666 | DESIGN OF ALGORITHMS      | SP             |     2013 | COREMEN        |           12 |
++--------------+----------------+---------+---------------------------+----------------+----------+----------------+--------------+
+7 rows in set (0.00 sec)
+
+
+mysql> SELECT * FROM BOOK_LENDING
+    -> WHERE DATE_OUT BETWEEN '2017-01-01' AND '2017-06-30' AND CARD_NO
+    -> IN
+    -> (SELECT CARD_NO
+    -> FROM BOOK_LENDING
+    -> GROUP BY CARD_NO
+    -> HAVING COUNT(CARD_NO)>3);
++---------+--------------+---------+------------+------------+
+| BOOK_ID | PROGRAMME_ID | CARD_NO | DATE_OUT   | DUE_DATE   |
++---------+--------------+---------+------------+------------+
+|    1111 |         1000 |      10 | 2017-02-15 | 2017-06-15 |
+|    2222 |         2000 |      10 | 2017-03-10 | 2017-08-15 |
+|    3333 |         3000 |      10 | 2017-04-15 | 2017-09-15 |
+|    4444 |         4000 |      10 | 2017-06-10 | 2017-11-15 |
++---------+--------------+---------+------------+------------+
+4 rows in set (0.00 sec)
+
+mysql> DELETE FROM BOOK WHERE BOOK_ID=5555;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> SELECT * FROM BOOK;
++---------+---------------------------+----------------+----------+
+| BOOK_ID | TITLE                     | PUBLISHER_NAME | PUB_YEAR |
++---------+---------------------------+----------------+----------+
+|    1111 | FUNNDAMENTALS OF DATABASE | PHI            |     2009 |
+|    2222 | BASICS OF LOGIC DESIGN    | PEARSON        |     2009 |
+|    3333 | DATA STRUCTURES           | MCGRAWHILL     |     2015 |
+|    4444 | ARTIFICIAL INTELLIGENCE   | WILEY          |     2017 |
+|    6666 | DESIGN OF ALGORITHMS      | SP             |     2013 |
++---------+---------------------------+----------------+----------+
+5 rows in set (0.00 sec)
+
+mysql> CREATE VIEW YEAR AS SELECT PUB_YEAR FROM BOOK;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT * FROM YEAR;
++----------+
+| PUB_YEAR |
++----------+
+|     2009 |
+|     2009 |
+|     2015 |
+|     2017 |
+|     2013 |
++----------+
+5 rows in set (0.00 sec)
+
+mysql> CREATE VIEW ALL_BOOK AS
+    -> SELECT
+    -> B.BOOK_ID,B.TITLE,C.NO_OF_COPIES,L.PROGRAMME_NAME
+    -> FROM BOOK B,BOOK_COPIES C,LIBRARY_PROGRAMME L
+    -> WHERE B.BOOK_ID=C.BOOK_ID
+    -> AND
+    -> L.PROGRAMME_ID=C.PROGRAMME_ID;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql>
+mysql> SELECT * FROM ALL_BOOK;
++---------+---------------------------+--------------+----------------+
+| BOOK_ID | TITLE                     | NO_OF_COPIES | PROGRAMME_NAME |
++---------+---------------------------+--------------+----------------+
+|    1111 | FUNNDAMENTALS OF DATABASE |           10 | MVIT           |
+|    2222 | BASICS OF LOGIC DESIGN    |           15 | MVIT           |
+|    2222 | BASICS OF LOGIC DESIGN    |            5 | SVIT           |
+|    3333 | DATA STRUCTURES           |            7 | BMSIT          |
+|    4444 | ARTIFICIAL INTELLIGENCE   |            9 | SVCE           |
+|    6666 | DESIGN OF ALGORITHMS      |           12 | NMIT           |
++---------+---------------------------+--------------+----------------+
+6 rows in set (0.00 sec)
+
+DATABASE 2:
+mysql> SELECT * FROM SALESMAN;
++-------------+----------+-----------+-----------+
+| SALESMAN_ID | NAME     | CITY      | COMISSION |
++-------------+----------+-----------+-----------+
+|        1000 | RAMA     | BANGALORE |  10000.75 |
+|        2000 | KRISHNA  | MATHURA   |  20000.25 |
+|        3000 | SHIVA    | AMARNATH  |  30000.30 |
+|        4000 | GOVINDA  | TIRUPATHI |   4000.40 |
+|        5000 | NARAYANA | VELLORE   |  50000.50 |
++-------------+----------+-----------+-----------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT * FROM CUSTOMER;
++-------------+-----------+-----------+-------+-------------+
+| CUSTOMER_ID | CUST_NAME | CITY      | GRADE | SALESMAN_ID |
++-------------+-----------+-----------+-------+-------------+
+|          10 | GANESH    | BANGALORE |   100 |        1000 |
+|          20 | SUDHEEP   | BANGALORE |   200 |        2000 |
+|          30 | PRABHAS   | HYDERABAD |   300 |        3000 |
+|          40 | ARVIND    | CHENNAI   |   400 |        4000 |
+|          50 | DARSHAN   | BANGALORE |   500 |        2000 |
+|          60 | YASH      | BANGALORE |   600 |        1000 |
++-------------+-----------+-----------+-------+-------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM ORDERS;
++--------+--------------+------------+-------------+-------------+
+| ORD_NO | PURCHASE_AMT | ORD_DATE   | CUSTOMER_ID | SALESMAN_ID |
++--------+--------------+------------+-------------+-------------+
+|   1111 |    100000.00 | 2017-01-01 |          10 |        2000 |
+|   2222 |    200000.00 | 2017-02-21 |          20 |        3000 |
+|   3333 |    300000.00 | 2017-03-15 |          30 |        4000 |
+|   4444 |    400000.00 | 2017-04-18 |          40 |        5000 |
+|   5555 |    500000.00 | 2017-05-12 |          10 |        1000 |
+|   6666 |    600000.00 | 2017-05-12 |          10 |        1000 |
++--------+--------------+------------+-------------+-------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT COUNT(CUSTOMER_ID)
+    -> FROM CUSTOMER
+    -> WHERE GRADE>( SELECT AVG(GRADE)
+    -> FROM CUSTOMER
+    -> WHERE CITY='BANGALORE' );
++--------------------+
+| COUNT(CUSTOMER_ID) |
++--------------------+
+|                  3 |
++--------------------+
+1 row in set (0.01 sec)
+
+mysql> SELECT S.NAME,S.SALESMAN_ID
+    -> FROM SALESMAN S,CUSTOMER C
+    -> WHERE S.SALESMAN_ID=C.SALESMAN_ID
+    -> GROUP BY S.NAME,S.SALESMAN_ID
+    -> HAVING COUNT(C.CUSTOMER_ID)>1;
++---------+-------------+
+| NAME    | SALESMAN_ID |
++---------+-------------+
+| RAMA    |        1000 |
+| KRISHNA |        2000 |
++---------+-------------+
+2 rows in set (0.00 sec)
+
+mysql> (SELECT S.SALESMAN_ID,S.NAME,C.CUST_NAME
+    -> FROM SALESMAN S,CUSTOMER C
+    -> WHERE S.CITY=C.CITY AND S.SALESMAN_ID=C.SALESMAN_ID)
+    -> UNION
+    -> (SELECT S1.SALESMAN_ID,S1.NAME,'NO CUSTOMER'
+    -> FROM SALESMAN S1,CUSTOMER C1
+    -> WHERE S1.CITY!=C1.CITY AND S1.SALESMAN_ID=C1.SALESMAN_ID );
++-------------+---------+-------------+
+| SALESMAN_ID | NAME    | CUST_NAME   |
++-------------+---------+-------------+
+|        1000 | RAMA    | GANESH      |
+|        1000 | RAMA    | YASH        |
+|        2000 | KRISHNA | NO CUSTOMER |
+|        3000 | SHIVA   | NO CUSTOMER |
+|        4000 | GOVINDA | NO CUSTOMER |
++-------------+---------+-------------+
+5 rows in set (0.00 sec)
+mysql> DELETE FROM SALESMAN WHERE SALESMAN_ID=1000;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT * FROM CUSTOMER;
++-------------+-----------+-----------+-------+-------------+
+| CUSTOMER_ID | CUST_NAME | CITY      | GRADE | SALESMAN_ID |
++-------------+-----------+-----------+-------+-------------+
+|          10 | GANESH    | BANGALORE |   100 |        NULL |
+|          20 | SUDHEEP   | BANGALORE |   200 |        2000 |
+|          30 | PRABHAS   | HYDERABAD |   300 |        3000 |
+|          40 | ARVIND    | CHENNAI   |   400 |        4000 |
+|          50 | DARSHAN   | BANGALORE |   500 |        2000 |
+|          60 | YASH      | BANGALORE |   600 |        NULL |
++-------------+-----------+-----------+-------+-------------+
+6 rows in set (0.00 sec)
+
+
+DATABASE 3:
+
+mysql> SELECT * FROM ACTOR;
++--------+----------------+------------+
+| ACT_ID | ACT_NAME       | ACT_GENDER |
++--------+----------------+------------+
+|     10 | AAYUSHMAN      | M          |
+|     20 | VARUNDHAWAN    | M          |
+|     30 | DEEPIKA        | F          |
+|     40 | CHRISPRATT     | M          |
+|     50 | ANTHONYPERKINS | M          |
+|     60 | SHRADDHA       | F          |
++--------+----------------+------------+
+6 rows in set (0.01 sec)
+
+mysql> SELECT * FROM DIRECTOR;
++--------+------------------+------------+
+| DIR_ID | DIR_NAME         | DIR_PHONE  |
++--------+------------------+------------+
+|     11 | SOOJITH          | 1020304050 |
+|     22 | STEVEN SPIELBERG | 1122334455 |
+|     33 | DAVID            |  996644332 |
+|     44 | HITCH COCK       | 1002003000 |
+|     55 | BANSALI          |  908070605 |
+|     66 | REMO             |  998877665 |
++--------+------------------+------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM MOVIES;
++--------+-------------------+----------+----------+--------+
+| MOV_ID | MOV_TITLE         | MOV_YEAR | MOV_LANG | DIR_ID |
++--------+-------------------+----------+----------+--------+
+|    111 | ABCD2             |     1999 | HINDI    |     66 |
+|    222 | PSYCHO            |     1995 | ENGLISH  |     44 |
+|    333 | BAREILLI KI BURFI |     2017 | HINDI    |     11 |
+|    444 | RAMLEELA          |     2015 | HINDI    |     55 |
+|    555 | MEIN TERA HERO    |     2014 | HINDI    |     33 |
+|    666 | JURASSIC PARK     |     2000 | ENGLISH  |     22 |
+|    777 | VICKY DONOR       |     2011 | HINDI    |     11 |
++--------+-------------------+----------+----------+--------+
+7 rows in set (0.00 sec)
+
+mysql> SELECT * FROM MOVIE_CAST;
++--------+--------+---------+
+| ACT_ID | MOV_ID | ROLE    |
++--------+--------+---------+
+|     10 |    333 | HERO    |
+|     10 |    777 | HERO    |
+|     20 |    111 | HERO    |
+|     20 |    555 | HERO    |
+|     30 |    444 | HEROINE |
+|     40 |    666 | HERO    |
+|     50 |    222 | VILLAIN |
+|     60 |    111 | HEROINE |
+|     60 |    333 | HEROINE |
++--------+--------+---------+
+9 rows in set (0.00 sec)
+
+mysql> SELECT * FROM RATING;
++--------+-----------+
+| MOV_ID | REV_STARS |
++--------+-----------+
+|    111 |         3 |
+|    111 |         5 |
+|    222 |         2 |
+|    222 |         3 |
+|    333 |         0 |
+|    444 |         4 |
+|    444 |         5 |
+|    555 |         3 |
+|    666 |         5 |
+|    777 |         4 |
++--------+-----------+
+10 rows in set (0.00 sec)
+
+mysql> SELECT M.MOV_TITLE
+    -> FROM MOVIES M,DIRECTOR D
+    -> WHERE D.DIR_ID=M.DIR_ID AND D.DIR_NAME='HITCH COCK';
++-----------+
+| MOV_TITLE |
++-----------+
+| PSYCHO    |
++-----------+
+1 row in set (0.00 sec)
+mysql> SELECT M.MOV_TITLE,A.ACT_NAME
+    -> FROM MOVIES M,ACTOR A,MOVIE_CAST M1
+    -> WHERE M.MOV_ID=M1.MOV_ID AND
+    -> M1.ACT_ID=A.ACT_ID AND
+    -> M1.ACT_ID IN( SELECT ACT_ID
+    -> FROM MOVIE_CAST
+    -> GROUP BY ACT_ID
+    -> HAVING COUNT(MOV_ID)>1);
++-------------------+-------------+
+| MOV_TITLE         | ACT_NAME    |
++-------------------+-------------+
+| BAREILLI KI BURFI | AAYUSHMAN   |
+| VICKY DONOR       | AAYUSHMAN   |
+| ABCD2             | VARUNDHAWAN |
+| MEIN TERA HERO    | VARUNDHAWAN |
+| ABCD2             | SHRADDHA    |
+| BAREILLI KI BURFI | SHRADDHA    |
++-------------------+-------------+
+6 rows in set (0.00 sec)
+
+mysql> (SELECT A.ACT_NAME
+    -> FROM ACTOR A JOIN MOVIE_CAST M ON A.ACT_ID=M.ACT_ID
+    -> JOIN MOVIES M1 ON M.MOV_ID=M1.MOV_ID
+    -> WHERE M1.MOV_YEAR<2000 )
+    -> INTERSECT
+    -> (SELECT A.ACT_NAME
+    -> FROM ACTOR A JOIN MOVIE_CAST M ON A.ACT_ID=M.ACT_ID
+    -> JOIN MOVIES M1 ON M.MOV_ID=M1.MOV_ID
+    -> WHERE M1.MOV_YEAR>2015 );
++----------+
+| ACT_NAME |
++----------+
+| SHRADDHA |
++----------+
+1 row in set (0.00 sec)
+
+mysql> SELECT M.MOV_TITLE,MAX(R.REV_STARS)
+    -> FROM MOVIES M,RATING R
+    -> WHERE M.MOV_ID=R.MOV_ID AND
+    -> M.MOV_ID IN(SELECT MOV_ID
+    -> FROM RATING
+    -> GROUP BY MOV_ID,REV_STARS
+    -> HAVING REV_STARS>0 )
+    ->
+    -> GROUP BY M.MOV_TITLE
+    -> ORDER BY M.MOV_TITLE;
++----------------+------------------+
+| MOV_TITLE      | MAX(R.REV_STARS) |
++----------------+------------------+
+| ABCD2          |                5 |
+| JURASSIC PARK  |                5 |
+| MEIN TERA HERO |                3 |
+| PSYCHO         |                3 |
+| RAMLEELA       |                5 |
+| VICKY DONOR    |                4 |
++----------------+------------------+
+6 rows in set (0.00 sec)
+
+mysql> UPDATE RATING SET REV_STARS=5
+    -> WHERE MOV_ID IN ( SELECT MOV_ID
+    -> FROM MOVIES
+    -> WHERE DIR_ID=(SELECT DIR_ID
+    -> FROM DIRECTOR
+    -> WHERE DIR_NAME='STEVEN SPIELBERG' )
+    ->
+    -> );
+Query OK, 0 rows affected (0.01 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> SELECT * FROM RATING;
++--------+-----------+
+| MOV_ID | REV_STARS |
++--------+-----------+
+|    111 |         3 |
+|    111 |         5 |
+|    222 |         2 |
+|    222 |         3 |
+|    333 |         0 |
+|    444 |         4 |
+|    444 |         5 |
+|    555 |         3 |
+|    666 |         5 |
+|    777 |         4 |
++--------+-----------+
+10 rows in set (0.00 sec)
+
+
+DATABASE 4:
+
+mysql> SELECT * FROM STUDENT;
++------------+-----------+-----------+------------+--------+
+| USN        | SNAME     | ADDRESS   | PHONE      | GENDER |
++------------+-----------+-----------+------------+--------+
+| 1MV14CS001 | DEVAYANI  | BANGALORE | 1000200030 | F      |
+| 1MV14CS060 | DAVID     | KOCHI     |  900080007 | M      |
+| 1MV14CS130 | AISHWARYA | MUMBAI    | 1000020000 | F      |
+| 1MV15CS001 | ANSHUMAN  | PANAJI    | 1112223334 | M      |
+| 1MV15CS060 | AMRUTHA   | BANGALORE | 1002003004 | F      |
+| 1MV15CS130 | BHUVANESH | JAIPUR    |  900800700 | M      |
+| 1MV16CS001 | ABHIJITH  | PUNE      |  998877665 | M      |
+| 1MV16CS060 | NIKITHA   | HYDERABAD |  908070605 | F      |
+| 1MV16CS130 | SANJANA   | GUWAHATTI | 1234567890 | F      |
+| 1MV17CS001 | AASHISH   | BANGALORE | 1020304050 | M      |
+| 1MV17CS060 | NAELA     | MYSORE    | 1122334455 | F      |
+| 1MV17CS130 | MILIND    | JAMMU     |  506070809 | M      |
++------------+-----------+-----------+------------+--------+
+12 rows in set (0.01 sec)
+
+mysql> SELECT * FROM SEMSEC;
++------+------+------+
+| SSID | SEM  | SEC  |
++------+------+------+
+| 2A   |    2 | A    |
+| 2B   |    2 | B    |
+| 2C   |    2 | C    |
+| 4A   |    4 | A    |
+| 4B   |    4 | B    |
+| 4C   |    4 | C    |
+| 6A   |    6 | A    |
+| 6B   |    6 | B    |
+| 6C   |    6 | C    |
+| 8A   |    8 | A    |
+| 8B   |    8 | B    |
+| 8C   |    8 | C    |
++------+------+------+
+12 rows in set (0.01 sec)
+
+mysql> SELECT * FROM CLASS;
++------------+------+
+| USN        | SSID |
++------------+------+
+| 1MV17CS001 | 2A   |
+| 1MV17CS060 | 2B   |
+| 1MV17CS130 | 2C   |
+| 1MV16CS001 | 4A   |
+| 1MV16CS060 | 4B   |
+| 1MV16CS130 | 4C   |
+| 1MV15CS001 | 6A   |
+| 1MV15CS060 | 6B   |
+| 1MV15CS130 | 6C   |
+| 1MV14CS001 | 8A   |
+| 1MV14CS060 | 8B   |
+| 1MV14CS130 | 8C   |
++------------+------+
+12 rows in set (0.01 sec)
+
+mysql> SELECT * FROM SUBJECT;
++---------+-------+------+---------+
+| SUBCODE | TITLE | SEM  | CREDITS |
++---------+-------+------+---------+
+| 10CS81  | SA    |    8 |       4 |
+| 10CS842 | ST    |    8 |       3 |
+| 15CS21  | M2    |    2 |       4 |
+| 15CS42  | SE    |    4 |       4 |
+| 15CS44  | MP    |    4 |       4 |
+| 15CS62  | USP   |    6 |       4 |
+| 15CS64  | CG    |    6 |       4 |
+| 15PCD23 | PCD   |    2 |       4 |
++---------+-------+------+---------+
+8 rows in set (0.01 sec)
+
+mysql> SELECT * FROM IAMARKS;
++------------+---------+------+-------+-------+-------+---------+
+| USN        | SUBCODE | SSID | TEST1 | TEST2 | TEST3 | FINALIA |
++------------+---------+------+-------+-------+-------+---------+
+| 1MV14CS001 | 10CS81  | 8A   |    19 |    18 |    17 |    NULL |
+| 1MV14CS060 | 10CS842 | 8B   |    11 |     0 |    14 |    NULL |
+| 1MV14CS130 | 10CS81  | 8C   |    10 |     0 |     7 |    NULL |
+| 1MV15CS001 | 15CS64  | 6A   |    12 |    12 |    12 |    NULL |
+| 1MV15CS060 | 15CS62  | 6B   |    18 |    19 |    20 |    NULL |
+| 1MV15CS130 | 15CS64  | 6C   |     8 |    12 |    11 |    NULL |
+| 1MV16CS001 | 15CS42  | 4A   |    19 |    19 |    18 |    NULL |
+| 1MV16CS060 | 15CS44  | 4B   |     5 |     8 |     5 |    NULL |
+| 1MV16CS130 | 15CS42  | 4C   |    20 |    20 |    20 |    NULL |
+| 1MV17CS001 | 15CS21  | 2A   |    15 |    14 |    13 |    NULL |
+| 1MV17CS060 | 15PCD23 | 2B   |    15 |    15 |    14 |    NULL |
+| 1MV17CS130 | 15CS21  | 2C   |    11 |    12 |    13 |    NULL |
++------------+---------+------+-------+-------+-------+---------+
+12 rows in set (0.01 sec)
+
+mysql> SELECT S.USN,S.SNAME,S.ADDRESS,S.PHONE,S.GENDER
+    -> FROM STUDENT S,CLASS C,SEMSEC SS
+    -> WHERE S.USN=C.USN AND
+    -> SS.SSID=C.SSID AND
+    -> SS.SEM=4 AND
+    -> SS.SEC='C';
++------------+---------+-----------+------------+--------+
+| USN        | SNAME   | ADDRESS   | PHONE      | GENDER |
++------------+---------+-----------+------------+--------+
+| 1MV16CS130 | SANJANA | GUWAHATTI | 1234567890 | F      |
++------------+---------+-----------+------------+--------+
+1 row in set (0.00 sec)
+
+mysql> SELECT SS.SEM,SS.SEC,S.GENDER,COUNT(S.GENDER)
+    -> FROM STUDENT S,SEMSEC SS,CLASS C
+    -> WHERE S.USN=C.USN AND SS.SSID=C.SSID
+    -> GROUP BY SS.SEM,SS.SEC,S.GENDER;
++------+------+--------+-----------------+
+| SEM  | SEC  | GENDER | COUNT(S.GENDER) |
++------+------+--------+-----------------+
+|    2 | A    | M      |               1 |
+|    2 | B    | F      |               1 |
+|    2 | C    | M      |               1 |
+|    4 | A    | M      |               1 |
+|    4 | B    | F      |               1 |
+|    4 | C    | F      |               1 |
+|    6 | A    | M      |               1 |
+|    6 | B    | F      |               1 |
+|    6 | C    | M      |               1 |
+|    8 | A    | F      |               1 |
+|    8 | B    | M      |               1 |
+|    8 | C    | F      |               1 |
++------+------+--------+-----------------+
+12 rows in set (0.00 sec)
+
+mysql> CREATE VIEW TEST1_MARKS AS
+    -> SELECT USN,SUBCODE,TEST1
+    -> FROM IAMARKS
+    -> WHERE USN='1MV15CS060';
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT * FROM TEST1_MARKS;
++------------+---------+-------+
+| USN        | SUBCODE | TEST1 |
++------------+---------+-------+
+| 1MV15CS060 | 15CS62  |    18 |
++------------+---------+-------+
+1 row in set (0.00 sec)
+
+mysql> UPDATE IAMARKS SET TEST1=19,TEST2=18,TEST3=17 WHERE USN='1MV14CS001';
+Query OK, 0 rows affected (0.01 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> UPDATE IAMARKS SET TEST1=11,TEST2=0,TEST3=14 WHERE USN='1MV14CS060';
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> UPDATE IAMARKS SET TEST1=10,TEST2=0,TEST3=7 WHERE USN='1MV14CS130';
+Query OK, 0 rows affected (0.00 sec)
+Rows matched: 1  Changed: 0  Warnings: 0
+
+mysql> SELECT * FROM IAMARKS;
++------------+---------+------+-------+-------+-------+---------+
+| USN        | SUBCODE | SSID | TEST1 | TEST2 | TEST3 | FINALIA |
++------------+---------+------+-------+-------+-------+---------+
+| 1MV14CS001 | 10CS81  | 8A   |    19 |    18 |    17 |    NULL |
+| 1MV14CS060 | 10CS842 | 8B   |    11 |     0 |    14 |    NULL |
+| 1MV14CS130 | 10CS81  | 8C   |    10 |     0 |     7 |    NULL |
+| 1MV15CS001 | 15CS64  | 6A   |    12 |    12 |    12 |    NULL |
+| 1MV15CS060 | 15CS62  | 6B   |    18 |    19 |    20 |    NULL |
+| 1MV15CS130 | 15CS64  | 6C   |     8 |    12 |    11 |    NULL |
+| 1MV16CS001 | 15CS42  | 4A   |    19 |    19 |    18 |    NULL |
+| 1MV16CS060 | 15CS44  | 4B   |     5 |     8 |     5 |    NULL |
+| 1MV16CS130 | 15CS42  | 4C   |    20 |    20 |    20 |    NULL |
+| 1MV17CS001 | 15CS21  | 2A   |    15 |    14 |    13 |    NULL |
+| 1MV17CS060 | 15PCD23 | 2B   |    15 |    15 |    14 |    NULL |
+| 1MV17CS130 | 15CS21  | 2C   |    11 |    12 |    13 |    NULL |
++------------+---------+------+-------+-------+-------+---------+
+12 rows in set (0.00 sec)
+
+
+
+
+
+mysql> SELECT S.USN,S.SNAME,S.ADDRESS,S.PHONE,S.GENDER,
+    -> ( CASE
+    -> WHEN IA.FINALIA BETWEEN 17 AND 20
+    -> THEN 'OUTSTANDING'
+    -> WHEN IA.FINALIA BETWEEN 12 AND 16
+    -> THEN 'AVERAGE'
+    -> ELSE 'WEAK'
+    -> END
+    -> ) AS CAT
+    -> FROM STUDENT S,SEMSEC SS,IAMARKS IA
+    -> WHERE S.USN=IA.USN AND
+    -> SS.SSID=IA.SSID AND
+    -> SS.SEM=8;
+    -> #
++------------+-----------+-----------+------------+--------+-------------+
+| USN        | SNAME     | ADDRESS   | PHONE      | GENDER | CAT         |
++------------+-----------+-----------+------------+--------+-------------+
+| 1MV14CS001 | DEVAYANI  | BANGALORE | 1000200030 | F      | OUTSTANDING |
+| 1MV14CS060 | DAVID     | KOCHI     |  900080007 | M      | AVERAGE     |
+| 1MV14CS130 | AISHWARYA | MUMBAI    | 1000020000 | F      | WEAK        |
++------------+-----------+-----------+------------+--------+-------------+
+3 rows in set (0.01 sec)
+
+DATABASE 5:
+
+mysql> SELECT * FROM EMPLOYEE;
++-----------+---------+----------------+------+---------+-----------+------+
+| SSN       | NAME    | ADDRESS        | SEX  | SALARY  | SUPERSSN  | DNO  |
++-----------+---------+----------------+------+---------+-----------+------+
+| 112233445 | SAVITHA | DBSANDRA       | F    |  700000 | 112233445 |    2 |
+| 123456789 | ASHA    | YELAHANKA      | F    |  500000 | 123456789 |    2 |
+| 223344556 | VIJAY   | VIJAYPURA      | M    |  600000 | 223344556 |    2 |
+| 234567891 | SHEELA  | JAKPUR         | F    |  700000 | 234567891 |    2 |
+| 334455667 | MANDHAR | JAYMAHAL       | M    |  500000 |      NULL | NULL |
+| 345678912 | PALLAVI | NEWTOWN        | F    |  700000 | 345678912 |    4 |
+| 445566778 | RAGHAV  | YELAHANKA      | M    |  600000 |      NULL | NULL |
+| 456789123 | SHREYAS | BASAWESWAR     | M    |  750000 | 456789123 |    4 |
+| 567891234 | MOHAN   | TUMKUR         | M    |  350000 |      NULL | NULL |
+| 678912345 | SCOTT   | NEWYORK        | M    | 1000000 | 678912345 |    5 |
+| 789123456 | DIVYA   | HUNSMARENHALLI | F    |  350000 |      NULL | NULL |
+| 891234567 | SAPNA   | VIDYARANYAPURA | F    |  350000 |      NULL | NULL |
+| 912345678 | REVAN   | MADIWALA       | M    |  450000 |      NULL | NULL |
++-----------+---------+----------------+------+---------+-----------+------+
+13 rows in set (0.01 sec)
+
+mysql> SELECT * FROM DEPARTMENT;
++-----+----------+-----------+--------------+
+| DNO | DNAME    | MGRSSN    | MGRSTARTDATE |
++-----+----------+-----------+--------------+
+|   1 | CSE      | 234567891 | 2010-01-01   |
+|   2 | ISE      | 345678912 | 2011-02-15   |
+|   3 | ECE      | 456789123 | 2012-03-01   |
+|   4 | ACCOUNTS | 678912345 | 2013-04-15   |
+|   5 | TCE      | 123456789 | 2014-05-02   |
+|   6 | ECE      | 567891234 | 2015-06-15   |
++-----+----------+-----------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM DLOCATION;
++-----+------+
+| DNO | DLOC |
++-----+------+
+|   1 | NB1  |
+|   2 | NB0  |
+|   3 | NB2  |
+|   4 | NB1  |
+|   5 | NB3  |
+|   6 | EEE2 |
++-----+------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM PROJECT;
++-----+---------+-----------------+------+
+| PNO | PNAME   | PLOCATION       | DNO  |
++-----+---------+-----------------+------+
+|  11 | JAVA    | MARATHAHALLI    |    1 |
+|  22 | DOTNET  | HEBBAL          |    2 |
+|  33 | IOT     | MANYATA         |    3 |
+|  44 | ANDROID | YELAHANKA       |    4 |
+|  55 | BIGDATA | KR PURAM        |    5 |
+|  66 | WEB     | ELECTRONIC CITY |    6 |
++-----+---------+-----------------+------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT * FROM WORKS_ON;
++-----------+-----+-------+
+| SSN       | PNO | HOURS |
++-----------+-----+-------+
+| 123456789 |  22 |    33 |
+| 234567891 |  33 |     8 |
+| 345678912 |  55 |    20 |
+| 456789123 |  66 |    10 |
+| 678912345 |  11 |    25 |
+| 678912345 |  44 |    40 |
++-----------+-----+-------+
+6 rows in set (0.00 sec)
+
+mysql> (SELECT DISTINCT P.PNO
+    -> FROM PROJECT P,DEPARTMENT D,EMPLOYEE E
+    -> WHERE P.DNO=D.DNO AND D.MGRSSN=E.SSN AND E.NAME='SCOTT')
+    -> UNION
+    -> (SELECT DISTINCT P.PNO
+    -> FROM PROJECT P,WORKS_ON W,EMPLOYEE E
+    -> WHERE P.PNO=W.PNO AND W.SSN=E.SSN AND E.NAME='SCOTT');
++-----+
+| PNO |
++-----+
+|  44 |
+|  11 |
++-----+
+2 rows in set (0.00 sec)
+
+mysql> SELECT E.NAME,1.1*E.SALARY AS HIKE_SALARY
+    -> FROM EMPLOYEE E,WORKS_ON W,PROJECT P
+    -> WHERE E.SSN=W.SSN AND P.PNO=W.PNO AND P.PNAME='IOT';
++--------+-------------+
+| NAME   | HIKE_SALARY |
++--------+-------------+
+| SHEELA |    770000.0 |
++--------+-------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT SUM(E.SALARY) AS SUM_SAL,MAX(E.SALARY) AS MAX_SAL,MIN(E.SALARY) AS
+    -> MIN_SAL,AVG(E.SALARY) AS AVG_SAL
+    -> FROM EMPLOYEE E,DEPARTMENT D
+    -> WHERE E.DNO=D.DNO AND D.DNAME='ACCOUNTS';
++---------+---------+---------+-------------+
+| SUM_SAL | MAX_SAL | MIN_SAL | AVG_SAL     |
++---------+---------+---------+-------------+
+| 1450000 |  750000 |  700000 | 725000.0000 |
++---------+---------+---------+-------------+
+1 row in set (0.00 sec)
+
+
